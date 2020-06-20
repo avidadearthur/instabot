@@ -1,20 +1,21 @@
 from selenium import webdriver
 from time import sleep
-from pages import HomePage, Feed
+from pages import LoginPage, FeedPage
 import os
 
 
-def login_page(browser, user_username, user_password):
-    home_page = HomePage(browser)
-    home_page.login(user_username, user_password)
+def login(browser, user_username, user_password):
+    login_page = LoginPage(browser)
+    login_page.login(user_username, user_password)
 
     errors = browser.find_elements_by_css_selector("#error_message")
     assert len(errors) == 0
 
-    return
+    feed = FeedPage(browser)
+    feed.access_feed(browser)
+    feed.close_popup()
 
-def access_feed(browser):
-    Feed(browser)
+    sleep(5)
 
     return
 
@@ -26,8 +27,7 @@ def main():
         raise RuntimeError('\nUSERNAME or PASSWORD were not set')
     
     browser = webdriver.Chrome()
-    login_page(browser, username, password)
-    access_feed(browser)
+    login(browser, username, password)
     
 
 if __name__ == '__main__':
