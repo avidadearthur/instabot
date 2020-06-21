@@ -11,13 +11,8 @@ Please make sure to update tests as appropriate.
 
 Clone the repository and use the package manager [pip](https://pip.pypa.io/en/stable/) to install the modules on requirenments.txt.
 
-(Python 2)
 ```bash
 pip install -r requirements.txt , or pip3 install -r requirements.txt (Python 3)
-```
-(Python 3)
-```bash
-pip3 install -r requirements.txt (Python 3)
 ```
 
 ## Usage (for debug and tests) MacOS
