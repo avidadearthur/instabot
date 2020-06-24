@@ -81,5 +81,54 @@ class Instactions:
         except TimeoutException:
             print('Timed out waiting for page to load')
 
+    def get_followers(self, username, num=None):
+        """
+        Handles the Instagram actions through a the
+        current driver that is supporting browser navigation.
+
+        :Args:
+        - username: A str, username of whom the list will be made
+        - max: An int, max size of list
+
+        :Usage:
+            Instactions('<user_username>', '<max_list_size>')
+
+        :Returns:
+            List of followers of the selected user
+
+        https://stackoverflow.com/questions/47211939/scroll-down-list-instagram-selenium-and-python/50313947
+
+        """
+        self.browser.get('https://www.instagram.com/' + username)
+        followers_link = self.browser.find_element_by_css_selector('ul li a')
+
+        followers_link.click()
+        try:
+            followers_list = WebDriverWait(self.browser, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div[role=\'dialog\'] ul"))
+            )
+            followers_list.click()
+
+        except TimeoutException:
+            print('Timed out waiting for page to load')
+
+        length = self.browser.execute_script("return (document.getElementsByTagName('ul')[2]).getElementsByTagName('li').length")
+
+        while length < 199:
+            index = length - 1
+            sleep(3)
+            self.browser.execute_script("(document.getElementsByTagName('ul')[2]).getElementsByTagName('li')[arguments[0]].scrollIntoView(true)", index)
+            sleep(3)
+            length = self.browser.execute_script("return (document.getElementsByTagName('ul')[2]).getElementsByTagName('li').length")
+        
+           
+        followers = []
+        for user in followers_list.find_elements_by_css_selector('li'):
+            userLink = user.find_element_by_css_selector('a').get_attribute('href')
+            print(userLink)
+            followers.append(userLink)
+            if (len(followers) == num):
+                break
+        return followers
 
 
