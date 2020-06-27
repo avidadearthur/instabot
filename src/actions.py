@@ -29,8 +29,6 @@ def _keep_id(func):
         browser = webdriver.Remote(command_executor=url,desired_capabilities={})
         browser.close()
         browser.session_id = session_id
-        if func.__name__ == "login":
-            browser.get('https://www.instagram.com/')
 
         # Open new window before calling function
         if func.__name__ != "login":
@@ -51,7 +49,6 @@ class Instactions:
 
     :Usage:
         Instactions('<webdriver>', '<user_username>', '<user_password>')
-
     """
     def __init__(self, browser, username, password):
         self.browser = browser
@@ -62,7 +59,6 @@ class Instactions:
     def login(self):
         """
         Fills Instagram login form and goes to users's feed
-
         """
         self.browser.get('https://www.instagram.com/accounts/login/')
 
@@ -103,29 +99,14 @@ class Instactions:
         except TimeoutException:
             print('Timed out waiting for page to load')
 
-    @_keep_id
-    def get_followers(self, username, num=None):
+    def _scrape_users(self, num):
         """
-        Handles the Instagram actions through a the
-        current driver that is supporting browser navigation.
-
-        :Args:
-        - username: A str, username of whom the list will be made
-        - max: An int, max size of list
-
-        :Usage:
-            Instactions('<user_username>', '<max_list_size>')
-
         :Returns:
             List of followers of the selected user
 
         https://stackoverflow.com/questions/47211939/scroll-down-list-instagram-selenium-and-python/50313947
-
         """
-        self.browser.get('https://www.instagram.com/' + username)
-        followers_link = self.browser.find_element_by_css_selector('ul li a')
 
-        followers_link.click()
         try:
             followers_list = WebDriverWait(self.browser, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div[role=\'dialog\'] ul"))
@@ -156,5 +137,49 @@ class Instactions:
             if (len(followers) == num):
                 break
         return followers
+    
+    @_keep_id
+    def get_followers(self, username, num=None):
+        """
+        Access the nth('<num>') '<username>' arg followers.
+        In case num=None the method will try to get all users in the list. 
 
+        :Args:
+        - username: A str, username of whom the list will be made
+        - max(optional): An int, max size of list
+
+        :Usage:
+            Instactions('<user_username>', '<max_list_size>')
+
+        :Returns:
+            List of followers of the selected user
+        """
+        self.browser.get('https://www.instagram.com/' + username)
+        followers_link = self.browser.find_elements_by_css_selector('ul li a')[0]
+        followers_link.click()
+
+        self._scrape_users(num)
+
+        
+    @_keep_id
+    def get_following(self, username, num=None):
+        """
+        Access the nth('<num>') users followed by the '<username>' arg.
+        In case num=None the method will try to get all users in the list. 
+
+        :Args:
+        - username: A str, username of whom the list will be made
+        - max(optional): An int, max size of list
+
+        :Usage:
+            Instactions('<user_username>', '<max_list_size>')
+
+        :Returns:
+            List of users the selected user follows
+        """
+        self.browser.get('https://www.instagram.com/' + username)
+        followers_link = self.browser.find_elements_by_css_selector('ul li a')[1]
+        followers_link.click()
+    
+        self._scrape_users(num)
 
