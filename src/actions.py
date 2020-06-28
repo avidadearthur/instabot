@@ -83,6 +83,19 @@ class Instactions:
         assert len(errors) == 0
     
     @_keep_id
+    def logout(self):
+        self.browser.get('https://www.instagram.com/{}'.format(self.username))
+        self.browser.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/div[1]/div/button').click()
+        sleep(1)
+        self.browser.find_element_by_xpath('//button[contains(text(), "Log Out")]').click()
+        sleep(1)
+        try:
+            self.browser.find_element_by_xpath('//button[contains(text(), "Log Out")]').click()
+        except Exception:
+            pass
+        sleep(3)
+    
+    @_keep_id
     def access_feed(self):
         self.browser.get('https://www.instagram.com/')
 
@@ -254,16 +267,4 @@ class Instactions:
                 except Exception:
                     continue    
 
-    @_keep_id
-    def logout(self):
-        self.browser.get('https://www.instagram.com/{}'.format(self.username))
-        self.browser.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/div[1]/div/button').click()
-        sleep(1)
-        self.browser.find_element_by_xpath('//button[contains(text(), "Log Out")]').click()
-        sleep(1)
-        try:
-            self.browser.find_element_by_xpath('//button[contains(text(), "Log Out")]').click()
-        except Exception:
-            pass
-        sleep(3)
 
