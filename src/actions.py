@@ -208,7 +208,7 @@ class Instactions:
         followers_link = self.browser.find_elements_by_css_selector('ul li a')[1]
         followers_link.click()
 
-        for _ in range(1, 5):
+        for _ in range(num):
             sleep(2)
             try:
                 self.browser.find_element_by_xpath('//button[contains(text(), "Following")]').click() #Click Following button
