@@ -216,7 +216,7 @@ class Instactions:
         return followed
 
     @_keep_id
-    def unfollow(self, num):
+    def unfollow_from_list(self, num):
         self.browser.get('https://www.instagram.com/{}'.format(self.username))
         followers_link = self.browser.find_elements_by_css_selector('ul li a')[1]
         followers_link.click()
@@ -225,10 +225,6 @@ class Instactions:
             sleep(2)
             try:
                 self.browser.find_element_by_xpath('//button[contains(text(), "Following")]').click() #Click Following button
-            except KeyboardInterrupt:
-                self.browser.get('https://www.instagram.com/{}'.format(self.username))
-                sleep(4)
-                self.logout()
             except Exception:
                 self.browser.get('https://www.instagram.com/{}'.format(self.username))
                 sleep(4)
@@ -241,10 +237,6 @@ class Instactions:
 
             try:
                 self.browser.find_element_by_xpath('//button[contains(text(), "Unfollow")]').click() #Click Final Unfollow button
-            except KeyboardInterrupt:
-                self.browser.get('https://www.instagram.com/{}'.format(self.username))
-                sleep(4)
-                self.logout()
             except Exception:
                 self.browser.get('https://www.instagram.com/{}'.format(self.username))
                 sleep(4)
@@ -252,19 +244,28 @@ class Instactions:
                 sleep(2)                    
                 try:
                     self.browser.find_element_by_xpath('//button[contains(text(), "Following")]').click() #Click Following button
-                except KeyboardInterrupt:
-                    self.browser.get('https://www.instagram.com/{}'.format(self.username))
-                    sleep(4)
-                    self.logout()
                 except Exception:
                     continue
                 try:
                     self.browser.find_element_by_xpath('//button[contains(text(), "Unfollow")]').click() #Click Final Unfollow button
-                except KeyboardInterrupt:
-                    self.browser.get('https://www.instagram.com/{}'.format(self.username))
-                    sleep(4)
-                    self.logout()
                 except Exception:
                     continue    
+    
+    @_keep_id
+    def follow_from_list(self, num):
+        self.browser.get('https://www.instagram.com/{}'.format(self.username))
 
+        for index in range(num):
+            sleep(2)
+            try:
+                (self.browser.find_elements_by_xpath('//button[contains(text(), "Follow")]')[index]).click() #Click Following button
+            except Exception:
+                self.browser.get('https://www.instagram.com/{}'.format(self.username))
+                sleep(4)
+                self.browser.find_element_by_xpath('//a[@href= "/{}/followers/"]'.format(self.username)).click() #Click User's Following button
+                sleep(2)
+                try:
+                    (self.browser.find_elements_by_xpath('//button[contains(text(), "Follow")]')[index]).click()
+                except NoSuchElementException:
+                    continue
 
