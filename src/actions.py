@@ -1,9 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
 import functools
 
@@ -129,17 +130,10 @@ class Instactions:
             if last_length == length or length > num:
                 break
             
-        followers = []
-        for user in followers_list.find_elements_by_css_selector('li'):
-            userLink = user.find_element_by_css_selector('a').get_attribute('href')
-            print(userLink)
-            followers.append(userLink)
-            if (len(followers) == num):
-                break
-        return followers
+        return followers_list.find_elements_by_css_selector('li')
     
     @_keep_id
-    def get_followers(self, username, num=None):
+    def get_followers(self, num=None, user=None):
         """
         Access the nth('<num>') '<username>' arg followers.
         In case num=None the method will try to get all users in the list. 
@@ -154,15 +148,27 @@ class Instactions:
         :Returns:
             List of followers of the selected user
         """
-        self.browser.get('https://www.instagram.com/' + username)
+        if user == None:
+            user = self.username
+
+        self.browser.get('https://www.instagram.com/{}'.format(user))
         followers_link = self.browser.find_elements_by_css_selector('ul li a')[0]
         followers_link.click()
 
-        self._scrape_users(num)
+        users_raw = self._scrape_users(num)
 
+        followers = []
+        for user in users_raw:
+            userLink = user.find_element_by_css_selector('a').get_attribute('href')
+            print(userLink)
+            followers.append(userLink)
+            if (len(followers) == num):
+                break
         
+        return followers
+    
     @_keep_id
-    def get_following(self, username, num=None):
+    def get_following(self, num=None, user=None):
         """
         Access the nth('<num>') users followed by the '<username>' arg.
         In case num=None the method will try to get all users in the list. 
@@ -177,9 +183,87 @@ class Instactions:
         :Returns:
             List of users the selected user follows
         """
-        self.browser.get('https://www.instagram.com/' + username)
+        if user == None:
+            user = self.username
+
+        self.browser.get('https://www.instagram.com/{}'.format(user))
         followers_link = self.browser.find_elements_by_css_selector('ul li a')[1]
         followers_link.click()
     
-        self._scrape_users(num)
+        users_raw = self._scrape_users(num)
+        
+        followed = []
+        for user in users_raw:
+            userLink = user.find_element_by_css_selector('a').get_attribute('href')
+            print(userLink)
+            followed.append(userLink)
+            if (len(followed) == num):
+                break
+        
+        return followed
+
+    @_keep_id
+    def unfollow(self, num):
+        self.browser.get('https://www.instagram.com/{}'.format(self.username))
+        followers_link = self.browser.find_elements_by_css_selector('ul li a')[1]
+        followers_link.click()
+
+        for _ in range(1, 5):
+            sleep(2)
+            try:
+                self.browser.find_element_by_xpath('//button[contains(text(), "Following")]').click() #Click Following button
+            except KeyboardInterrupt:
+                self.browser.get('https://www.instagram.com/{}'.format(self.username))
+                sleep(4)
+                self.logout()
+            except Exception:
+                self.browser.get('https://www.instagram.com/{}'.format(self.username))
+                sleep(4)
+                self.browser.find_element_by_xpath('//a[@href= "/{}/following/"]'.format(self.username)).click() #Click User's Following button
+                sleep(2)
+                try:
+                    self.browser.find_element_by_xpath('//button[contains(text(), "Following")]').click()
+                except NoSuchElementException:
+                    continue
+
+            try:
+                self.browser.find_element_by_xpath('//button[contains(text(), "Unfollow")]').click() #Click Final Unfollow button
+            except KeyboardInterrupt:
+                self.browser.get('https://www.instagram.com/{}'.format(self.username))
+                sleep(4)
+                self.logout()
+            except Exception:
+                self.browser.get('https://www.instagram.com/{}'.format(self.username))
+                sleep(4)
+                self.browser.find_element_by_xpath('//a[@href= "/{}/following/"]'.format(self.username)).click() #Click User's Following button
+                sleep(2)                    
+                try:
+                    self.browser.find_element_by_xpath('//button[contains(text(), "Following")]').click() #Click Following button
+                except KeyboardInterrupt:
+                    self.browser.get('https://www.instagram.com/{}'.format(self.username))
+                    sleep(4)
+                    self.logout()
+                except Exception:
+                    continue
+                try:
+                    self.browser.find_element_by_xpath('//button[contains(text(), "Unfollow")]').click() #Click Final Unfollow button
+                except KeyboardInterrupt:
+                    self.browser.get('https://www.instagram.com/{}'.format(self.username))
+                    sleep(4)
+                    self.logout()
+                except Exception:
+                    continue    
+
+    @_keep_id
+    def logout(self):
+        self.browser.get('https://www.instagram.com/{}'.format(self.username))
+        self.browser.find_element_by_xpath('//*[@id="react-root"]/section/main/div/header/section/div[1]/div/button').click()
+        sleep(1)
+        self.browser.find_element_by_xpath('//button[contains(text(), "Log Out")]').click()
+        sleep(1)
+        try:
+            self.browser.find_element_by_xpath('//button[contains(text(), "Log Out")]').click()
+        except Exception:
+            pass
+        sleep(3)
 
