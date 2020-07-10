@@ -7,6 +7,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
 import functools
+import datetime
+import dateutil.parser
+import pytz
 
 def _keep_id(func):
     @functools.wraps(func)
@@ -269,3 +272,23 @@ class Instactions:
                 except NoSuchElementException:
                     continue
 
+    @_keep_id
+    def new_activity(self):
+        self.browser.get('https://www.instagram.com/accounts/activity/')
+        
+        try:
+            activities = self.browser.find_elements_by_xpath("/html/body/div[1]/section/main/div/div/div/div/div")
+        except NoSuchElementException:
+            print("Element not found")
+
+        for activity in activities:
+            activity_datetime = (activity.find_elements_by_xpath(".//time"))[0].get_attribute("datetime")
+            event_datetime = dateutil.parser.parse(activity_datetime)
+            current_datetime = pytz.utc.localize(datetime.datetime.utcnow())
+            print(activity_datetime)
+            print(event_datetime)
+            print(current_datetime)
+            print(activity.text)
+            #activities[0].find_elements_by_xpath(".//button")
+        
+        return
