@@ -5,6 +5,39 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from time import sleep
+import functools
+
+def _keep_id(func):
+    @functools.wraps(func)
+    def wrapper_decorator(self, *args, **kwargs):
+        """
+        Switches to new window saving the session id
+        and opening a dummy browser.
+
+        https://stackoverflow.com/questions/8344776/can-selenium-interact-with-an-existing-browser-session
+        https://realpython.com/primer-on-python-decorators/#decorating-classes
+
+        """
+        # Open new window after login
+        if func.__name__ == "login":
+            value = func(self, *args, **kwargs)
+
+        
+        url = self.browser.command_executor._url 
+        session_id = self.browser.session_id
+
+        browser = webdriver.Remote(command_executor=url,desired_capabilities={})
+        browser.close()
+        browser.session_id = session_id
+        if func.__name__ == "login":
+            browser.get('https://www.instagram.com/')
+
+        # Open new window before calling function
+        if func.__name__ != "login":
+            value = func(self, *args, **kwargs)
+
+        return value
+    return wrapper_decorator
 
 class Instactions:
     """
@@ -25,6 +58,7 @@ class Instactions:
         self.username = username
         self.password = password
 
+    @_keep_id
     def login(self):
         """
         Fills Instagram login form and goes to users's feed
@@ -51,21 +85,9 @@ class Instactions:
         errors = self.browser.find_elements_by_css_selector("#error_message")
         assert len(errors) == 0
     
+    @_keep_id
     def access_feed(self):
-        """
-        Switches to feed saving the homepage login session id
-        and opening a dummy browser.
-
-        https://stackoverflow.com/questions/8344776/can-selenium-interact-with-an-existing-browser-session
-
-        """
-        url = self.browser.command_executor._url 
-        session_id = self.browser.session_id
-
-        browser = webdriver.Remote(command_executor=url,desired_capabilities={})
-        browser.close()
-        browser.session_id = session_id
-        browser.get('https://www.instagram.com/')
+        self.browser.get('https://www.instagram.com/')
 
     def close_popup(self):
         """
@@ -81,6 +103,7 @@ class Instactions:
         except TimeoutException:
             print('Timed out waiting for page to load')
 
+    @_keep_id
     def get_followers(self, username, num=None):
         """
         Handles the Instagram actions through a the
@@ -114,14 +137,17 @@ class Instactions:
 
         length = self.browser.execute_script("return (document.getElementsByTagName('ul')[2]).getElementsByTagName('li').length")
 
-        while length < 199:
+        while True:
+            last_length = length
             index = length - 1
-            sleep(3)
+            sleep(2)
             self.browser.execute_script("(document.getElementsByTagName('ul')[2]).getElementsByTagName('li')[arguments[0]].scrollIntoView(true)", index)
-            sleep(3)
+            sleep(2)
             length = self.browser.execute_script("return (document.getElementsByTagName('ul')[2]).getElementsByTagName('li').length")
-        
-           
+
+            if last_length == length or length > num:
+                break
+            
         followers = []
         for user in followers_list.find_elements_by_css_selector('li'):
             userLink = user.find_element_by_css_selector('a').get_attribute('href')
