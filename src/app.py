@@ -2,6 +2,7 @@ from selenium import webdriver
 from time import sleep
 import os
 from actions import Instactions
+from upload import Instaupload
 
 def main():
     user_username, user_password = os.getenv('USERNAME'), os.getenv('PASSWORD')
@@ -10,12 +11,14 @@ def main():
     if not os.environ.get('USERNAME') or not os.environ.get('PASSWORD'):
         raise RuntimeError('\nUSERNAME or PASSWORD were not set')
     
-    browser = webdriver.Chrome()
-    instactions = Instactions(browser, user_username, user_password)
+    # browser = webdriver.Chrome()
+    instaupload = Instaupload(user_username, user_password)
+    instaupload.post_photo("Bip Bop tzzz - test01")
+    # instactions = Instactions(browser, user_username, user_password)
 
-    instactions.login()
-    instactions.access_feed()
-    instactions.close_popup()
+    # instactions.login()
+    # instactions.access_feed()
+    # instactions.close_popup()
        
 
 if __name__ == '__main__':
